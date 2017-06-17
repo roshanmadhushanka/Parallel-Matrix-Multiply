@@ -7,6 +7,7 @@ https://computing.llnl.gov/tutorials/openMP/samples/C/omp_mm.c
 #include <stdlib.h>
 #include <time.h>
 #include <omp.h>
+#include <math.h>
 
 typedef double TYPE;
 
@@ -22,37 +23,17 @@ void displayMatrix(TYPE** matrix, int dimension);
 void displayFlatMatrix(TYPE* matrix, int dimension);
 
 // Performance tests
-void sequentialMultiplyTest(int iterations);
-void parallelMultiplyTest(int iterations);
-void optimizedParallelMultiplyTest(int iterations);
+void sequentialMultiplyTest(int dimension, int iterations);
+void parallelMultiplyTest(int dimension, int iterations);
+void optimizedParallelMultiplyTest(int dimension, int iterations);
 
 int main(int argc, char* argv[]){
-	int iterations = strtol(argv[1], NULL, 10);
-
-	TYPE** matrixA = randomMatrix(dimension);
-	TYPE** matrixB = randomMatrix(dimension);
-
-	// Loop from 200 * 200 to 2000 * 2000 by step of 200
-	for(int dimension=0; dimension<=2000; dimension=dimension+200){
-		double* opmLatency = malloc(iterations * sizeof(double));
-		for(int i0; i<iterations; i++){
-			; 
-		}
-		TYPE** matrixResult = zeroMatrix(dimension);	
-		optimizedParallelMultiply(matrixA, matrixB, matrixResult, dimension);
-		free(matrixResult);
-
-		TYPE** matrixResult = zeroFlatMatrix(dimension);
-		parallelMultiply(matrixA, matrixB, matrixResult, dimension);
-		free(matrixResult);
-
-		TYPE** matrixResult = zeroFlatMatrix(dimension);
-		sequentialMultiply(matrixA, matrixB, matrixResult, dimension);
-		free(matrixResult);
+	// int dimension = strtol(argv[1], NULL, 10);
+	// int iterations = strtol(argv[2], NULL, 10);
+	for(int dimension=200; dimension<=2000; dimension+=200){
+		sequentialMultiplyTest(dimension, 10);
 	}
-
-	free(matrixA);
-	free(matrixB);
+	
 
 	return 0;
 }
@@ -227,30 +208,143 @@ void displayFlatMatrix(TYPE* matrix, int dimension){
 }
 
 /* Performance tests */
-void sequentialMultiplyTest(int iterations){
+
+void sequentialMultiplyTest(int dimension, int iterations){
+	printf("----------------------------------\n");
+	printf("Test : Sequential Multiply        \n");
+	printf("----------------------------------\n");
+	printf("Dimension : %d\n", dimension);
+	printf("..................................\n");
+
+	double* opmLatency = malloc(iterations * sizeof(double));
 	TYPE** matrixA = randomMatrix(dimension);
 	TYPE** matrixB = randomMatrix(dimension);
-
-	// Loop from 200 * 200 to 2000 * 2000 by step of 200
-	for(int dimension=0; dimension<=2000; dimension=dimension+200){
-		double* opmLatency = malloc(iterations * sizeof(double));
-		for(int i; i<iterations; i++){
-			TYPE** matrixResult = zeroFlatMatrix(dimension);
-			sequentialMultiply(matrixA, matrixB, matrixResult, dimension);
-			free(matrixResult);
-		}
-	}
 	
+	// Iterate and measure performance
+	for(int i=0; i<iterations; i++){
+		TYPE** matrixResult = zeroMatrix(dimension);
+		opmLatency[i] = sequentialMultiply(matrixA, matrixB, matrixResult, dimension);
+		free(matrixResult);
+		printf("%d.\t%f\n", i+1, opmLatency[i]);
+	}
+
+	printf("\n");
+	printf("----------------------------------\n");
+	printf("Analyze Measurements              \n");
+	printf("----------------------------------\n");
+
+	double sum = 0.0;
+	double sumSquared = 0.0;
+
+	// Statistical analyze
+	for(int i=0; i<iterations; i++){
+		sum += opmLatency[i];
+		sumSquared += pow(opmLatency[i], 2.0);
+	}
+
+	double mean = sum / iterations;
+	double squareMean = sumSquared / iterations;
+	double standardDeviation = sqrt(squareMean - pow(mean, 2.0));
+
+	printf("Mean               : %f\n", mean);
+	printf("Standard Deviation : %f\n", standardDeviation);
+	printf("----------------------------------\n");
+
+	free(opmLatency);
 	free(matrixA);
 	free(matrixB);
 }
 
-void parallelMultiplyTest(int iterations){
+void parallelMultiplyTest(int dimension, int iterations){
+	printf("----------------------------------\n");
+	printf("Test : parallel Multiply          \n");
+	printf("----------------------------------\n");
+	printf("Dimension : %d\n", dimension);
+	printf("..................................\n");
 
+	double* opmLatency = malloc(iterations * sizeof(double));
+	TYPE** matrixA = randomMatrix(dimension);
+	TYPE** matrixB = randomMatrix(dimension);
+	
+	// Iterate and measure performance
+	for(int i=0; i<iterations; i++){
+		TYPE** matrixResult = zeroMatrix(dimension);
+		opmLatency[i] = parallelMultiply(matrixA, matrixB, matrixResult, dimension);
+		free(matrixResult);
+		printf("%d.\t%f\n", i+1, opmLatency[i]);
+	}
+
+	printf("\n");
+	printf("----------------------------------\n");
+	printf("Analyze Measurements              \n");
+	printf("----------------------------------\n");
+
+	double sum = 0.0;
+	double sumSquared = 0.0;
+
+	// Statistical analyze
+	for(int i=0; i<iterations; i++){
+		sum += opmLatency[i];
+		sumSquared += pow(opmLatency[i], 2.0);
+	}
+
+	double mean = sum / iterations;
+	double squareMean = sumSquared / iterations;
+	double standardDeviation = sqrt(squareMean - pow(mean, 2.0));
+
+	printf("Mean               : %f\n", mean);
+	printf("Standard Deviation : %f\n", standardDeviation);
+	printf("----------------------------------\n");
+
+	free(opmLatency);
+	free(matrixA);
+	free(matrixB);
 }
 
-void optimizedParallelMultiplyTest(int iterations){
+void optimizedParallelMultiplyTest(int dimension, int iterations){
+	printf("----------------------------------\n");
+	printf("Test : Optimized Parallel Multiply\n");
+	printf("----------------------------------\n");
+	printf("Dimension : %d\n", dimension);
+	printf("..................................\n");
 
+	double* opmLatency = malloc(iterations * sizeof(double));
+	TYPE** matrixA = randomMatrix(dimension);
+	TYPE** matrixB = randomMatrix(dimension);
+	
+	// Iterate and measure performance
+	for(int i=0; i<iterations; i++){
+		TYPE** matrixResult = zeroMatrix(dimension);
+		opmLatency[i] = optimizedParallelMultiply(matrixA, matrixB, matrixResult, dimension);
+		free(matrixResult);
+		printf("%d.\t%f\n", i+1, opmLatency[i]);
+	}
+
+	printf("\n");
+	printf("----------------------------------\n");
+	printf("Analyze Measurements              \n");
+	printf("----------------------------------\n");
+
+	double sum = 0.0;
+	double sumSquared = 0.0;
+
+	// Statistical analyze
+	for(int i=0; i<iterations; i++){
+		sum += opmLatency[i];
+		sumSquared += pow(opmLatency[i], 2.0);
+	}
+
+	double mean = sum / iterations;
+	double squareMean = sumSquared / iterations;
+	double standardDeviation = sqrt(squareMean - pow(mean, 2.0));
+
+	printf("Mean               : %f\n", mean);
+	printf("Standard Deviation : %f\n", standardDeviation);
+	printf("----------------------------------\n");
+
+	free(opmLatency);
+	free(matrixA);
+	free(matrixB);
 }
 
 
