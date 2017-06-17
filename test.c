@@ -18,9 +18,11 @@ double optimizedParallelMultiply(TYPE** matrixA, TYPE** matrixB, TYPE** result, 
 TYPE** randomMatrix(int dimension);
 TYPE** zeroMatrix(int dimension);
 TYPE* zeroFlatMatrix(int dimension);
-TYPE* flatMatrix(TYPE** matrix, int dimension);
+TYPE* rowMajor(TYPE** matrix, int dimension);
+TYPE* columnMajor(TYPE** matrix, int dimension);
 void displayMatrix(TYPE** matrix, int dimension);
 void displayFlatMatrix(TYPE* matrix, int dimension);
+TYPE* copyOf(TYPE* matrix, int dimension);
 
 // Performance tests
 void sequentialMultiplyTest(int dimension, int iterations);
@@ -28,12 +30,19 @@ void parallelMultiplyTest(int dimension, int iterations);
 void optimizedParallelMultiplyTest(int dimension, int iterations);
 
 int main(int argc, char* argv[]){
-	// int dimension = strtol(argv[1], NULL, 10);
-	// int iterations = strtol(argv[2], NULL, 10);
+	int iterations = strtol(argv[1], NULL, 10);
+
 	for(int dimension=200; dimension<=2000; dimension+=200){
-		sequentialMultiplyTest(dimension, 10);
+		optimizedParallelMultiplyTest(dimension, iterations);
 	}
-	
+
+	for(int dimension=200; dimension<=2000; dimension+=200){
+		parallelMultiplyTest(dimension, iterations);
+	}
+
+	for(int dimension=200; dimension<=2000; dimension+=200){
+		sequentialMultiplyTest(dimension, iterations);
+	}
 
 	return 0;
 }
@@ -107,22 +116,30 @@ double optimizedParallelMultiply(TYPE** matrixA, TYPE** matrixB, TYPE** result, 
 
 	/* Begining of process */
 
-	TYPE* matrixFlatA = flatMatrix(matrixA, dimension);
-	TYPE* matrixFlatB = flatMatrix(matrixB, dimension);
+	TYPE* matrixFlatA = rowMajor(matrixA, dimension);
+	TYPE* matrixFlatB = columnMajor(matrixB, dimension);
 
 	#pragma omp parallel shared(matrixFlatA, matrixFlatB, result) private(i, j, k, tot)
 	{
+		
+		int size = dimension * dimension;
+		TYPE* tempA = copyOf(matrixFlatA, size);
+		TYPE* tempB = copyOf(matrixFlatB, size);
+
 		n_thread = omp_get_num_threads();
 		#pragma omp for schedule(static)
 		for(i=0; i<dimension; i++){
 			for(j=0; j<dimension; j++){
 				tot = 0;
 				for(k=0; k<dimension; k++){
-					tot += matrixFlatA[dimension * i + k] * matrixFlatB[dimension * k + j];
+					tot += matrixFlatA[dimension * i + k] * matrixFlatB[dimension * j + k];
 				}
 				result[i][j] = tot;
 			}
 		}
+
+		free(tempA);
+		free(tempB);
 	}
 
 	free(matrixFlatA);
@@ -179,11 +196,22 @@ TYPE* zeroFlatMatrix(int dimension){
 	return matrix;
 }
 
-TYPE* flatMatrix(TYPE** matrix, int dimension){
+
+TYPE* rowMajor(TYPE** matrix, int dimension){
 	TYPE* flatMatrix = malloc(dimension * dimension * sizeof(TYPE));
 	for(int i=0; i<dimension; i++){
 		for(int j=0; j<dimension; j++){
 			flatMatrix[i * dimension + j] = matrix[i][j];
+		}
+	}
+	return flatMatrix;
+}
+
+TYPE* columnMajor(TYPE** matrix, int dimension){
+	TYPE* flatMatrix = malloc(dimension * dimension * sizeof(TYPE));
+	for(int i=0; i<dimension; i++){
+		for(int j=0; j<dimension; j++){
+			flatMatrix[j * dimension + i] = matrix[i][j];
 		}
 	}
 	return flatMatrix;
@@ -205,6 +233,14 @@ void displayFlatMatrix(TYPE* matrix, int dimension){
 		}
 		printf("\n");
 	}
+}
+
+TYPE* copyOf(TYPE* matrix, int dimension){
+	TYPE* copy = malloc(dimension * sizeof(TYPE));
+	for(int i=0; i<dimension; i++){
+		copy[i] = matrix[i];
+	}
+	return copy;
 }
 
 /* Performance tests */
