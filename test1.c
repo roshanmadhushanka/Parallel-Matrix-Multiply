@@ -125,7 +125,6 @@ double optimizedParallelMultiply(TYPE** matrixA, TYPE** matrixB, TYPE** result, 
 	clock_t start, end;
 	double cpu_time_used;
 	int i, j, k, n_thread;
-	double tot;
 
 	start = clock();
 
@@ -134,7 +133,7 @@ double optimizedParallelMultiply(TYPE** matrixA, TYPE** matrixB, TYPE** result, 
 	TYPE* matrixFlatA = rowMajor(matrixA, dimension);
 	TYPE* matrixFlatB = columnMajor(matrixB, dimension);
 
-	#pragma omp parallel shared(matrixFlatA, matrixFlatB, result) private(i, j, k, tot)
+	#pragma omp parallel shared(matrixFlatA, matrixFlatB, result) private(i, j, k)
 	{
 		
 		int size = dimension * dimension;
@@ -145,7 +144,7 @@ double optimizedParallelMultiply(TYPE** matrixA, TYPE** matrixB, TYPE** result, 
 		#pragma omp for schedule(static)
 		for(i=0; i<dimension; i++){
 			for(j=0; j<dimension; j++){
-				tot = 0;
+				register double tot = 0;
 				for(k=0; k<dimension; k++){
 					tot += tempA[dimension * i + k] * tempB[dimension * j + k];
 				}

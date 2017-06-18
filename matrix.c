@@ -106,8 +106,8 @@ void parallelMultiply(TYPE** matrixA, TYPE** matrixB, TYPE** result, int dimensi
 void optimizedParallelMultiply(TYPE** matrixA, TYPE** matrixB, TYPE** result, int dimension){
 	clock_t start, end;
 	double cpu_time_used;
-	int i, j, k, tot, n_thread;
-
+	int i, j, k, n_thread;
+	double tot;
 	start = clock();
 
 	/* Begining of process */
