@@ -28,10 +28,13 @@ int main(int argc, char* argv[]){
 	TYPE** matrixB = randomMatrix(dimension);
 	TYPE** matrixResult = zeroMatrix(dimension);
 	
-	// optimizedParallelMultiply(matrixA, matrixB, matrixResult, dimension);
-	parallelMultiply(matrixA, matrixB, matrixResult, dimension);
+	optimizedParallelMultiply(matrixA, matrixB, matrixResult, dimension);
+	// parallelMultiply(matrixA, matrixB, matrixResult, dimension);
 	// sequentialMultiply(matrixA, matrixB, matrixResult, dimension);
 
+	displayMatrix(matrixA, dimension);
+	displayMatrix(matrixB, dimension);
+	displayMatrix(matrixResult, dimension);
 	free(matrixA);
 	free(matrixB);
 	free(matrixResult);
@@ -107,7 +110,6 @@ void optimizedParallelMultiply(TYPE** matrixA, TYPE** matrixB, TYPE** result, in
 	clock_t start, end;
 	double cpu_time_used;
 	int i, j, k, n_thread;
-	double tot;
 	start = clock();
 
 	/* Begining of process */
@@ -115,7 +117,7 @@ void optimizedParallelMultiply(TYPE** matrixA, TYPE** matrixB, TYPE** result, in
 	TYPE* matrixFlatA = rowMajor(matrixA, dimension);
 	TYPE* matrixFlatB = columnMajor(matrixB, dimension);
 
-	#pragma omp parallel shared(matrixFlatA, matrixFlatB, result) private(i, j, k, tot)
+	#pragma omp parallel shared(matrixFlatA, matrixFlatB, result) private(i, j, k)
 	{
 		
 		int size = dimension * dimension;
@@ -125,6 +127,7 @@ void optimizedParallelMultiply(TYPE** matrixA, TYPE** matrixB, TYPE** result, in
 		n_thread = omp_get_num_threads();
 		#pragma omp for schedule(static)
 		for(i=0; i<dimension; i++){
+			register double tot;
 			for(j=0; j<dimension; j++){
 				tot = 0;
 				for(k=0; k<dimension; k++){
@@ -148,7 +151,7 @@ void optimizedParallelMultiply(TYPE** matrixA, TYPE** matrixB, TYPE** result, in
 
 
 	cpu_time_used = ((double) (end - start)) / (CLOCKS_PER_SEC * n_thread);
-	printf("Result for : Parallel Flat Matrix multiplication\n");
+	printf("Result for : Optimized Matrix multiplication    \n");
 	printf("------------------------------------------------\n");
 	printf("Dimension  : %d\n", dimension);
 	printf("Time taken : %f seconds\n", cpu_time_used);
