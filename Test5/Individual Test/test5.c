@@ -31,32 +31,25 @@ void parallelMultiplyTest(int dimension, int iterations);
 void optimizedParallelMultiplyTest(int dimension, int iterations);
 
 int main(int argc, char* argv[]){
-	int iterations = strtol(argv[1], NULL, 10);
+	int test = strtol(argv[1], NULL, 10);
+	int dimension = strtol(argv[2], NULL, 10);
+	int iterations = strtol(argv[3], NULL, 10);
 
-	// Generate Necessary files
-	// Create Sequential Multiply test log
-	FILE* fp;
-	fp = fopen("SequentialMultiplyTest.txt", "w+");
-	fclose(fp);
-
-	// Create Parallel Multiply test log
-	fp = fopen("ParallelMultiplyTest.txt", "w+");
-	fclose(fp);
-
-	// Create Optimized Parallel Multiply test log
-	fp = fopen("OptimizedParallelMultiplyTest.txt", "w+");
-	fclose(fp);
-
-	for(int dimension=200; dimension<=2000; dimension+=200){
-		optimizedParallelMultiplyTest(dimension, iterations);
-	}
-
-	for(int dimension=200; dimension<=2000; dimension+=200){
-		parallelMultiplyTest(dimension, iterations);
-	}
-
-	for(int dimension=200; dimension<=2000; dimension+=200){
+	if(test==0){
+		FILE* fp;
+		fp = fopen("SequentialMultiplyTest.txt", "w+");
 		sequentialMultiplyTest(dimension, iterations);
+		fclose(fp);
+	} else if(test==1){
+		FILE* fp;
+		fp = fopen("ParallelMultiplyTest.txt", "w+");
+		parallelMultiplyTest(dimension, iterations);
+		fclose(fp);
+	} else if(test==2){
+		FILE* fp;
+		fp = fopen("OptimizedParallelMultiplyTest.txt", "w+");
+		optimizedParallelMultiplyTest(dimension, iterations);
+		fclose(fp);
 	}
 
 	return 0;
