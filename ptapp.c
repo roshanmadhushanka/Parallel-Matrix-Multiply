@@ -8,7 +8,7 @@
 #define DIM 2000
 #define MAX 1000
 #define MIN 1
-#define THREAD_COUNT 40
+#define THREAD_COUNT 10
 
 // Data structures
 double matA[DIM][DIM];
@@ -26,7 +26,10 @@ void copyMatrix();
 void *copyChunk(void* threadId);
 void verifyCopy();
 
+pthread_mutex_t mutex;
+
 int main(){
+	populateInputMatrix();
 	struct timeval t0, t1;
 	gettimeofday(&t0, 0);
 	copyMatrix();
@@ -34,8 +37,6 @@ int main(){
 	gettimeofday(&t1, 0);
 	double elapsed = (t1.tv_sec-t0.tv_sec) * 1.0f + (t1.tv_usec - t0.tv_usec) / 1000000.0f;
 	printf("%f\n", elapsed);
-	//verifyCopy();
-	//multiplyMatrix();
 	return 0;
 }
 
@@ -71,6 +72,16 @@ void displayMatrix(){
 			}
 			printf("\n");
 		}
+
+		//Displaying Matrix C
+		printf("Matrix C\n");
+		printf("---------------------\n");
+		for(int i=0; i<DIM; i++){
+			for(int j=0; j<DIM; j++){
+				printf("%f\t", matC[i][j]);
+			}
+			printf("\n");
+		}
 	} else {
 		printf("Matrix size is too large to display\n");
 	}
@@ -94,7 +105,20 @@ void multiplyMatrix(){
 }
 
 void *multiplyChunk(void* threadId){
-	printf("Called by %ld\n", (long) threadId);
+	long id = (long) threadId;
+	long i_size = DIM / THREAD_COUNT;
+	long i_start = id * i_size;
+	double tot;
+
+	for(long i=i_start; i<i_start+i_size; i++){
+		for(long j=0; j<DIM; j++){
+			tot = 0;
+			for(long k=0; k<DIM; k++){
+				tot += flatA[i*DIM + k] * flatB[j*DIM + k];
+			}
+			//matC[i][j] = tot;
+		}
+	}
 	return NULL;
 }
 
