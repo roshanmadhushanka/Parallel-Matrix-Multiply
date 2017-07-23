@@ -113,7 +113,8 @@ double parallelMultiply(TYPE** matrixA, TYPE** matrixB, TYPE** result, int dimen
 }
 
 double optimizedParallelMultiply(TYPE** matrixA, TYPE** matrixB, TYPE** result, int dimension){
-	int i, j, k, n_thread, chunk;
+	int i, j, k, i_off, j_off;
+	register double tot;
 
 	struct timeval t0, t1;
 	gettimeofday(&t0, 0);
@@ -123,28 +124,20 @@ double optimizedParallelMultiply(TYPE** matrixA, TYPE** matrixB, TYPE** result, 
 	TYPE* matrixFlatA = rowMajor(matrixA, dimension);
 	TYPE* matrixFlatB = columnMajor(matrixB, dimension);
 
-	#pragma omp parallel shared(matrixFlatA, matrixFlatB, result) private(i, j, k)
+	#pragma omp parallel shared(matrixFlatA, matrixFlatB, result) private(i, j, k, i_off, j_off, tot)
 	{
-		
-		int size = dimension * dimension;
-		TYPE* tempA = copyOf(matrixFlatA, size);
-		TYPE* tempB = copyOf(matrixFlatB, size);
-
-		n_thread = omp_get_num_threads();
-		chunk = dimension / (n_thread * 5);
-		#pragma omp for schedule(dynamic, chunk)
+		#pragma omp for schedule(static)
 		for(i=0; i<dimension; i++){
+			i_off = dimension * i;
 			for(j=0; j<dimension; j++){
-				register double tot = 0;
+				j_off = dimension * j;
+				tot = 0;
 				for(k=0; k<dimension; k++){
-					tot += tempA[dimension * i + k] * tempB[dimension * j + k];
+					tot += matrixFlatA[i_off + k] * matrixFlatB[j_off + k];
 				}
 				result[i][j] = tot;
 			}
 		}
-
-		free(tempA);
-		free(tempB);
 	}
 
 	free(matrixFlatA);
