@@ -25,6 +25,7 @@ void *multiplyChunk(void* threadId);
 void copyMatrix();
 void *copyChunk(void* threadId);
 void verifyCopy();
+void verifyMultiplication();
 
 pthread_mutex_t mutex;
 
@@ -37,6 +38,7 @@ int main(){
 	gettimeofday(&t1, 0);
 	double elapsed = (t1.tv_sec-t0.tv_sec) * 1.0f + (t1.tv_usec - t0.tv_usec) / 1000000.0f;
 	printf("%f\n", elapsed);
+	verifyMultiplication();
 	return 0;
 }
 
@@ -116,7 +118,7 @@ void *multiplyChunk(void* threadId){
 			for(long k=0; k<DIM; k++){
 				tot += flatA[i*DIM + k] * flatB[j*DIM + k];
 			}
-			//matC[i][j] = tot;
+			matC[i][j] = tot;
 		}
 	}
 	return NULL;
@@ -171,4 +173,23 @@ void verifyCopy(){
 		}
 	}
 	printf("Matrices copied successfuly\n");
+}
+
+void verifyMultiplication(){
+	printf("Verifying multiplication\n");
+	int tot;
+	for(int i=0; i<DIM; i++){
+		for(int j=0; j<DIM; j++){
+			tot = 0;
+			for(int k=0; k<DIM; k++){
+				tot += matA[i][k] * matB[k][j];
+			}
+
+			if(tot != matC[i][j]){
+				printf("Resultant matrix not correct\n");
+				return;
+			}
+		}
+	}
+	printf("Resultant matrix is correct\n");
 }
