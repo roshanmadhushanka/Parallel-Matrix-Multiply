@@ -15,7 +15,7 @@ typedef double TYPE;
 TYPE** randomSquareMatrix(int dimension);
 TYPE** zeroSquareMatrix(int dimension);
 void displaySquareMatrix(TYPE** matrix, int dimension);
-void merge(TYPE** matrixA, TYPE** matrixB, int dimension);
+void convert(TYPE** matrixA, TYPE** matrixB, int dimension);
 
 // Matrix multiplication methods
 double sequentialMultiply(TYPE** matrixA, TYPE** matrixB, TYPE** matrixC, int dimension);
@@ -182,7 +182,7 @@ double optimizedParallelMultiply(TYPE** matrixA, TYPE** matrixB, TYPE** matrixC,
 	gettimeofday(&t0, 0);
 
 	/* Head */
-	merge(matrixA, matrixB, dimension);
+	convert(matrixA, matrixB, dimension);
 	#pragma omp parallel shared(matrixC) private(i, j, k, iOff, jOff, tot) num_threads(40)
 	{
 		#pragma omp for schedule(static)
@@ -206,7 +206,7 @@ double optimizedParallelMultiply(TYPE** matrixA, TYPE** matrixB, TYPE** matrixC,
 	return elapsed;
 }
 
-void merge(TYPE** matrixA, TYPE** matrixB, int dimension){
+void convert(TYPE** matrixA, TYPE** matrixB, int dimension){
 	#pragma omp parallel for
 	for(int i=0; i<dimension; i++){
 		for(int j=0; j<dimension; j++){
