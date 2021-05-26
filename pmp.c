@@ -35,8 +35,14 @@ TYPE flatB[MAX_DIM];
 void verifyMultiplication(TYPE** matrixA, TYPE** matrixB, TYPE** result, int dimension);
 
 int main(int argc, char* argv[]){
-	int iterations = strtol(argv[1], NULL, 10);
-
+	int iterations;
+	if(argc != 2)
+	{
+		printf("Usage: %s <iterations>\n", argv[0]);
+		return -1;
+	}
+	iterations = strtol(argv[1], NULL, 10);
+	
 	// Generate Necessary files
 	// Create Sequential Multiply test log
 	FILE* fp;
